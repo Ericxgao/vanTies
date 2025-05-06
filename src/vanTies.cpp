@@ -7,7 +7,9 @@ void init(Plugin* p) {
 
 	p->addModel(modelAd);
 	p->addModel(modelAdje);
+	#ifndef METAMODULE
 	p->addModel(modelBufke);
+	#endif
 	p->addModel(modelFuns);
 	p->addModel(modelSjoegele);
 }
