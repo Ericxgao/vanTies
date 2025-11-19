@@ -35,7 +35,8 @@ struct Adje : Module {
 	};
 	enum OutputId {
 		VPOCT_OUTPUT,
-		AMP_OUTPUT,
+		AMP_L_OUTPUT,
+		AMP_R_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -43,8 +44,17 @@ struct Adje : Module {
 		LIGHTS_LEN
 	};
 
+	Adje();
+
+	int partialChan[30] = {
+		1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+    1, 0, 1, 1, 0, 1, 0, 0, 0, 0,
+	  0, 1, 1, 1, 1, 0, 1, 0, 0, 1,
+	};
+
 	AdditiveOscillator::StretchQuant stretchQuant = AdditiveOscillator::CONTINUOUS;
 	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
+	Spectrum::StereoMode stereoMode = Spectrum::SOFT_PAN;
 	bool emptyOnReset = false;
 	int channels = 16;
 
@@ -56,14 +66,14 @@ struct Adje : Module {
 	bool isRandomized = false;
 	float resetLight = 0.f;
 	float pitch[16] = {};
-	float amp[16] = {};
+	float ampL[16] = {};
+	float ampR[16] = {};
 
 	bool resetSignal = false;
 
 	CvBuffer buf;
 	Spectrum spec;
 
-	Adje();
 
 	json_t* dataToJson() override;
 	void dataFromJson(json_t* rootJ) override;
