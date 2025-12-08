@@ -22,13 +22,13 @@ void SjoegeleDisplayWidget::drawLayer(const DrawArgs& args, int layer) {
 			nvgStrokeColor(args.vg, nvgRGBf(1., g, b));
 			nvgFillColor(args.vg, nvgRGBf(1.f, g, b));
 
-			float x1 = (module->pend[c].getX1() * .25f + .5f) * box.size.y;
+			float x1 = (module->pend[c].getX1() * .25f + .5f) * box.size.x;
 			float y1 = (-module->pend[c].getY1() * .25f + .5f) * box.size.y;
-			float x2 = (module->pend[c].getX2Abs() * .25f + .5f) * box.size.y;
+			float x2 = (module->pend[c].getX2Abs() * .25f + .5f) * box.size.x;
 			float y2 = (-module->pend[c].getY2Abs() * .25f + .5f) * box.size.y;
 
 			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg, box.size.y * .5f, box.size.y * .5f);
+			nvgMoveTo(args.vg, box.size.x * .5f, box.size.y * .5f);
 			nvgLineTo(args.vg, x1, y1);
 			nvgLineTo(args.vg, x2, y2);
 			nvgStroke(args.vg);

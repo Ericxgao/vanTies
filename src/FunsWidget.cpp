@@ -28,30 +28,33 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
           (.5f - .5f * module->osc[c].waveFunction2(x)) * box.size.y);
       nvgStroke(args.vg);
 
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv2(module->osc[c].getA()) * box.size.x,
-        0.f,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv2(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2) * box.size.y,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv2(1.f - module->osc[c].getA()) * box.size.x,
-        box.size.y,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv2(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2) * box.size.y,
-        1.f);
-      nvgFill(args.vg);
+      float x = module->osc[c].phaseDistortInv2(module->osc[c].getA());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, 0.f, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv2(module->osc[c].getB());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv2(1.f - module->osc[c].getA());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv2(1.f - module->osc[c].getB());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
 
       if (c % 2) {
         nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
@@ -69,45 +72,48 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
           (.5f - .5f * module->osc[c].waveFunction1(x)) * box.size.y);
       nvgStroke(args.vg);
 
+      x = module->osc[c].getC();
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, .5f * box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv1(module->osc[c].getA());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, 0.f, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv1(module->osc[c].getB());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv1(1.f - module->osc[c].getA());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
+
+      x = module->osc[c].phaseDistortInv1(1.f - module->osc[c].getB());
+      if (x > 0.f && x < 1.f) {
+        nvgBeginPath(args.vg);
+        nvgCircle(args.vg, x * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgFill(args.vg);
+      }
 
       nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].getC() * box.size.x,
-        .5f * box.size.y,
-        1.f);
+      nvgCircle(args.vg, 0.f, .5f * box.size.y, 1.f);
       nvgFill(args.vg);
       nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv1(module->osc[c].getA()) * box.size.x,
-        0.f,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv1(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2) * box.size.y,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv1(1.f - module->osc[c].getA()) * box.size.x,
-        box.size.y,
-        1.f);
-      nvgFill(args.vg);
-      nvgBeginPath(args.vg);
-      nvgCircle(args.vg,
-        module->osc[c].phaseDistortInv1(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2) * box.size.y,
-        1.f);
+      nvgCircle(args.vg, box.size.x, .5f * box.size.y, 1.f);
       nvgFill(args.vg);
     }
-
-    nvgBeginPath(args.vg);
-    nvgCircle(args.vg, 0.f, .5f * box.size.y, 1.f);
-    nvgFill(args.vg);
-    nvgBeginPath(args.vg);
-    nvgCircle(args.vg, box.size.x, .5f * box.size.y, 1.f);
-    nvgFill(args.vg);
   }
   Widget::drawLayer(args, layer);
 }
@@ -175,4 +181,8 @@ void FunsWidget::appendContextMenu(Menu* menu) {
      "Semitones",
      "Octaves" },
     &module->pitchQuant));
+
+  menu->addChild(createBoolPtrMenuItem(
+    "Restrict parameters (antialiasing)", "",
+    &module->restrictParams));
 }

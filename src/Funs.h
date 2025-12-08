@@ -55,11 +55,13 @@ struct Funs : Module {
 
   RatFuncOscillator osc[16];
 
+  bool restrictParams = true;
   int channels = 0;
   PitchQuant pitchQuant = CONTINUOUS;
 
   json_t* dataToJson() override;
   void dataFromJson(json_t* rootJ) override;
+  void onReset(const ResetEvent& e) override;
   void onSampleRateChange(const SampleRateChangeEvent& e) override;
   void process(const ProcessArgs& args) override;
 };

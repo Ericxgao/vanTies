@@ -67,16 +67,11 @@ Ad::Ad() {
 
 json_t* Ad::dataToJson() {
 	json_t* rootJ = json_object();
-	json_object_set_new(rootJ, "pitchQuant",
-		json_integer(pitchQuant));
-	json_object_set_new(rootJ, "stretchQuant",
-		json_integer(stretchQuant));
-	json_object_set_new(rootJ, "stereoMode",
-		json_integer(stereoMode));
-	json_object_set_new(rootJ, "cvBufferMode",
-		json_integer(cvBufferMode));
-	json_object_set_new(rootJ, "emptyOnReset",
-		json_boolean(emptyOnReset));
+	json_object_set_new(rootJ, "pitchQuant", json_integer(pitchQuant));
+	json_object_set_new(rootJ, "stretchQuant", json_integer(stretchQuant));
+	json_object_set_new(rootJ, "stereoMode", json_integer(stereoMode));
+	json_object_set_new(rootJ, "cvBufferMode", json_integer(cvBufferMode));
+	json_object_set_new(rootJ, "emptyOnReset", json_boolean(emptyOnReset));
 	return rootJ;
 }
 

@@ -35,9 +35,11 @@ float RatFuncOscillator::primaryWaveFunction_1(float x) {
 
 float RatFuncOscillator::primaryWaveFunction(float x) {
   x -= floorf(x);
-  return (x < .5f) ?
+  float y = (x < .5f) ?
     primaryWaveFunction_1(x) :
     -primaryWaveFunction_1(1.f - x);
+  // check for NaNs or infs
+  return (abs(y) < 2.f) ? y : 0.f;
 }
 
 // we don't need the following two inverse functions for audio output,
@@ -127,28 +129,45 @@ float RatFuncOscillator::phaseDistortInv2(float x) {
 
 // set the paramaters a, b, and c as values between 0. and 1.
 void RatFuncOscillator::setParams(float a, float b, float c) {
-  a = min(max(a, 0.f), 1.f);
-  b = min(max(b, 0.f), 1.f);
-  c = min(max(c, 0.f), 1.f);
+  if (restrictParams) {
+    // map the parameters in such a way that the worst aliasing is avoided
+    // (lots of more or less educated guessing is going on here)
 
-  // map the parameters in such a way that the worst aliasing is avoided
-  // (lots of more or less educated guessing is going on here)
+    // exclude values of c around 0 and 1
+    float minimum = min(16.f * abs((float)dPh[0]), .5f);
+    float maximum = 1.f - minimum;
+    c = min(max(c, minimum), maximum);
 
-  // exclude values of c around 0 and 1
-  float d = min(16.f * abs((float)dPh[0]), .5f);
-  c = min(max(c, d), 1.f - d);
+    // d is the normalized frequency (dPh[0]) 
+    // scaled with a factor that is 1 for c == .5
+    // and grows bigger for c -> 0 or 1
+    float d = abs((float)dPh[0] / (1.f - 2.f * abs(c - .5f)));
 
-  // range of a: (0, .5)
-  a *= .5f;
-  // exclude values of a around 0 and .5
-  d = min(16.f * abs((float)dPh[0]), .25f);
-  a = min(max(a, d), .5f - .5f * d);
+    // exclude values of a around 0 and 1
+    minimum = min(32.f * d, .5f);
+    maximum = max(min(1.f - 16.f * d, .99f), .5f);
+    a = min(max(a, minimum), maximum);
 
-  // range of b: (a, .5)
-  b = a + (.5f - a) * b;
-  // exclude values of b around a and .5
-  d = min(16.f * abs((float)dPh[0]), .25f - .5f * a);
-  b = min(max(b, a + d), .5f - d);
+    // range of a: (0, .5)
+    a *= .5f;
+
+    // exclude values of b around 0 and 1
+    minimum = min(8.f * d / (.5f - a), .5f);
+    maximum = max(1.f - 4.f * d / a, .5f);
+    b = min(max(b, minimum), maximum);
+
+    // range of b: (a, .5)
+    b = a + (.5f - a) * b;
+  } else {
+    c = min(max(c, 0.f), 1.f);
+    a = min(max(a, 0.f), 1.f);
+    b = min(max(b, 0.f), 1.f);
+
+    // range of a: (0, .5)
+    a *= .5f;
+    // range of b: (a, .5)
+    b = a + (.5f - a) * b;
+  }
 
   this->a = a;
   this->b = b;
@@ -156,6 +175,12 @@ void RatFuncOscillator::setParams(float a, float b, float c) {
 }
 
 void RatFuncOscillator::process() {
+  if (abs(dPh[0]) > .5) {
+    wave[0] = 0.f;
+    wave[1] = 0.f;
+    return;
+  }
+
   wave[0] = waveFunction1(ph[0]);
   wave[1] = waveFunction2(ph[0]);
 

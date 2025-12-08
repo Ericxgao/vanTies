@@ -37,11 +37,12 @@ Funs::Funs() {
     osc[c].setSampleRate(APP->engine->getSampleRate());
 }
 
-
 json_t* Funs::dataToJson() {
   json_t* rootJ = json_object();
   json_object_set_new(rootJ, "pitchQuant",
     json_integer(pitchQuant));
+  json_object_set_new(rootJ, "restrictParams",
+    json_boolean(restrictParams));
   return rootJ;
 }
 
@@ -49,6 +50,14 @@ void Funs::dataFromJson(json_t* rootJ) {
   json_t* pitchQuantJ = json_object_get(rootJ, "pitchQuant");
   if (pitchQuantJ)
     pitchQuant = (PitchQuant)json_integer_value(pitchQuantJ);
+  json_t* restrictParamsJ = json_object_get(rootJ, "restrictParams");
+  if (restrictParamsJ)
+    restrictParams = json_boolean_value(restrictParamsJ);
+}
+
+void Funs::onReset(const ResetEvent& e) {
+  Module::onReset(e);
+  restrictParams = true;
 }
 
 void Funs::onSampleRateChange(const SampleRateChangeEvent& e) {
@@ -88,7 +97,7 @@ void Funs::process(const ProcessArgs& args) {
     c += .1f * params[C_ATT_PARAM].getValue()
       * inputs[C_INPUT].getPolyVoltage(ch);
 
-    osc[ch].setFreq(pitch);
+    osc[ch].setRestrictParams(restrictParams);
     osc[ch].setParams(a, b, c);
 
     osc[ch].process();
