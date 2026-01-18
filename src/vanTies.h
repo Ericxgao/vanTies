@@ -13,3 +13,4 @@ extern Model* modelAdje;
 extern Model* modelBufke;
 extern Model* modelFuns;
 extern Model* modelSjoegele;
+extern Model* modelSjang;

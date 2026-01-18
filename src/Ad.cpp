@@ -54,7 +54,7 @@ Ad::Ad() {
 
 	for (int c = 0; c < 16; c++) {
 		buf[c].init(
-			4.f * APP->engine->getSampleRate() / (float)blockSize,
+			8.f * APP->engine->getSampleRate() / (float)blockSize,
 			128,
 			&cvBufferMode);
 		spec[c].init(128, &buf[c], 2, partialChan[c % 2]);
@@ -114,7 +114,7 @@ void Ad::onSampleRateChange(const SampleRateChangeEvent& e) {
 		spec[c].setSmoothCoeff(1.f / (float)blockSize);
 		// 4 seconds buffer
 		buf[c].resize(
-			(int)(4.f * APP->engine->getSampleRate() / (float)blockSize));
+			(int)(8.f * APP->engine->getSampleRate() / (float)blockSize));
 	}
 	reset(true);
 }

@@ -33,17 +33,17 @@ struct Sjoegele : Module {
 		LIGHTS_LEN
 	};
 
+	Sjoegele();
+
 	bool x2y2Relative = false;
 
 	int channels = 0;
 
 	bool initSignal[16] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true };
 	bool isInit[16] = {};
-	bool startUp = true;
+	bool startUp[16] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true };
 
 	DoublePendulum pend[16];
-
-	Sjoegele();
 
 	json_t* dataToJson() override;
 	void dataFromJson(json_t* rootJ) override;

@@ -11,8 +11,8 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
     nvgLineCap(args.vg, NVG_ROUND);
     nvgLineJoin(args.vg, NVG_ROUND);
 
-    for (int c = module->channels - 1; c >= 0; c--) {
-      if (!(c % 2)) {
+    for (int ch = module->channels - 1; ch >= 0; ch--) {
+      if (!(ch % 2)) {
         nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
         nvgFillColor(args.vg, nvgRGBf(1.f, .5f, .5f));
       } else {
@@ -20,43 +20,49 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
         nvgFillColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
       }
 
+      float a = module->osc[ch].phaseDistortInv2(module->osc[ch].getA());
+      float a1 = module->osc[ch].phaseDistortInv2(1.f - module->osc[ch].getA());
+      float b = module->osc[ch].phaseDistortInv2(module->osc[ch].getB());
+      float b1 = module->osc[ch].phaseDistortInv2(1.f - module->osc[ch].getB());
+      float c = module->osc[ch].getC();
+
       nvgBeginPath(args.vg);
       nvgMoveTo(args.vg, 0.f, .5f * box.size.y);
       for (float x = 7.8125e-3f; x <= 1.f; x += 7.8125e-3f) // 1/128
         nvgLineTo(args.vg,
           x * box.size.x,
-          (.5f - .5f * module->osc[c].waveFunction2(x)) * box.size.y);
+          (.5f - .5f * module->osc[ch].waveFunction2(x)) * box.size.y);
       nvgStroke(args.vg);
 
-      float x = module->osc[c].phaseDistortInv2(module->osc[c].getA());
+      float x = module->osc[ch].phaseDistortInv2(module->osc[ch].getA());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, 0.f, 1.f);
+        nvgCircle(args.vg, a * box.size.x, 0.f, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv2(module->osc[c].getB());
+      x = module->osc[ch].phaseDistortInv2(module->osc[ch].getB());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgCircle(args.vg, b * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv2(1.f - module->osc[c].getA());
+      x = module->osc[ch].phaseDistortInv2(1.f - module->osc[ch].getA());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, box.size.y, 1.f);
+        nvgCircle(args.vg, a1 * box.size.x, box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv2(1.f - module->osc[c].getB());
+      x = module->osc[ch].phaseDistortInv2(1.f - module->osc[ch].getB());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgCircle(args.vg, b1 * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      if (c % 2) {
+      if (ch % 2) {
         nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
         nvgFillColor(args.vg, nvgRGBf(1.f, .5f, .5f));
       } else {
@@ -64,46 +70,50 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
         nvgFillColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
       }
 
+      a = module->osc[ch].phaseDistortInv1(module->osc[ch].getA());
+      a1 = module->osc[ch].phaseDistortInv1(1.f - module->osc[ch].getA());
+      b = module->osc[ch].phaseDistortInv1(module->osc[ch].getB());
+      b1 = module->osc[ch].phaseDistortInv1(1.f - module->osc[ch].getB());
+
       nvgBeginPath(args.vg);
       nvgMoveTo(args.vg, 0.f, .5f * box.size.y);
       for (float x = 7.8125e-3f; x <= 1.f; x += 7.8125e-3f) // 1/128
         nvgLineTo(args.vg,
           x * box.size.x,
-          (.5f - .5f * module->osc[c].waveFunction1(x)) * box.size.y);
+          (.5f - .5f * module->osc[ch].waveFunction1(x)) * box.size.y);
       nvgStroke(args.vg);
 
-      x = module->osc[c].getC();
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, .5f * box.size.y, 1.f);
+        nvgCircle(args.vg, c * box.size.x, .5f * box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv1(module->osc[c].getA());
+      x = module->osc[ch].phaseDistortInv1(module->osc[ch].getA());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, 0.f, 1.f);
+        nvgCircle(args.vg, a * box.size.x, 0.f, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv1(module->osc[c].getB());
+      x = module->osc[ch].phaseDistortInv1(module->osc[ch].getB());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgCircle(args.vg, b * box.size.x, (.5f - .5f * M_SQRT1_2) * box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv1(1.f - module->osc[c].getA());
+      x = module->osc[ch].phaseDistortInv1(1.f - module->osc[ch].getA());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, box.size.y, 1.f);
+        nvgCircle(args.vg, a1 * box.size.x, box.size.y, 1.f);
         nvgFill(args.vg);
       }
 
-      x = module->osc[c].phaseDistortInv1(1.f - module->osc[c].getB());
+      x = module->osc[ch].phaseDistortInv1(1.f - module->osc[ch].getB());
       if (x > 0.f && x < 1.f) {
         nvgBeginPath(args.vg);
-        nvgCircle(args.vg, x * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
+        nvgCircle(args.vg, b1 * box.size.x, (.5f + .5f * M_SQRT1_2) * box.size.y, 1.f);
         nvgFill(args.vg);
       }
 

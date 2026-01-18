@@ -48,6 +48,6 @@ public:
   void init(float th1 = M_PI, float th2 = M_PI);
   void setLength(float l) { this->l = l; }
   void setGravity(float g) { this->g = g; }
-  void setCOF(float cof) { this->cof = cof ; }
+  void setCOF(float cof) { this->cof = cof; }
   void process();
 };

@@ -61,7 +61,7 @@ void AdditiveOscillator::process() {
   // sines bute force.
   // We use the identity sin(a+b) = 2*sin(a)*cos(b) - sin(a-b) :
   // sin((1+i*stretch)*ph)
-  //   = 2*sin((1+(i-1)*s)*ph)*cos(stretch*ph)
+  //   = 2*sin((1+(i-1)*stretch)*ph)*cos(stretch*ph)
   //     - sin((1+(i-2)*stretch)*ph) .
   // So we can compute the sines iteratively.
   // We define: sine_i := sin((1+i*stretch)*ph) ,

@@ -88,9 +88,10 @@ void Sjoegele::process(const ProcessArgs& args) {
 
 		initSignal[c] = (params[INIT_PARAM].getValue() > 0.f)
 			|| (inputs[INIT_INPUT].getPolyVoltage(c) > 2.5f);
-		if ((initSignal[c] && !isInit[c]) || startUp) {
+		if ((initSignal[c] && !isInit[c]) || startUp[c]) {
 			start(c);
 
+			startUp[c] = false;
 			isInit[c] = true;
 		} else {
 			if (!initSignal[c])
@@ -111,8 +112,6 @@ void Sjoegele::process(const ProcessArgs& args) {
 		outputs[TH1IS0_OUTPUT].setVoltage((pend[c].th1Is0()) ? 5.f : 0.f, c);
 		outputs[TH2IS0_OUTPUT].setVoltage((pend[c].th2Is0()) ? 5.f : 0.f, c);
 	}
-
-	startUp = false;
 }
 
 Model* modelSjoegele = createModel<Sjoegele, SjoegeleWidget>("Sjoegele");

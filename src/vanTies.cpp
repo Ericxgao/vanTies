@@ -10,4 +10,5 @@ void init(Plugin* p) {
 	p->addModel(modelBufke);
 	p->addModel(modelFuns);
 	p->addModel(modelSjoegele);
+	p->addModel(modelSjang);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <iostream>
 
 // an abstract class for oscillators
 template <int phasors = 1, int waveforms = 1>
@@ -17,7 +18,7 @@ public:
   void incrementPhases() {
     for (int i = 0; i < phasors; i++) {
       ph[i] += dPh[i];
-      ph[i] -= floorf(ph[i]);
+      ph[i] -= floor(ph[i]);
     }
   }
 
