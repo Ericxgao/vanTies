@@ -6,7 +6,8 @@
 template <int phasors = 1, int waveforms = 1>
 class Oscillator {
 public:
-  static constexpr float TWOPI = 2.f * M_PI;
+  static constexpr float PI = 3.14159265358979323846f;
+  static constexpr float TWOPI = 2.f * PI;
 
   int sampleRate = 0;
   float sampleTime = 0.f;
