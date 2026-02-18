@@ -43,7 +43,8 @@ Adje::Adje() {
 	configInput(RESET_INPUT, "reset");
 
 	configOutput(VPOCT_OUTPUT, "polyphonic V/oct");
-	configOutput(AMP_OUTPUT, "polyphonic amplitude");
+	configOutput(AMP_L_OUTPUT, "polyphonic amplitude left");
+	configOutput(AMP_R_OUTPUT, "polyphonic amplitude right");
 
 	blockSize = min(64, (int)(APP->engine->getSampleRate() / 750.f));
 	blockCounter = rand() % blockSize;
@@ -52,15 +53,15 @@ Adje::Adje() {
 		4.f * APP->engine->getSampleRate() / (float)blockSize,
 		16,
 		&cvBufferMode);
-	spec.init(31, &buf);
+	spec.init(31, &buf, 2, partialChan);
 
 	reset(true);
 }
 
 json_t* Adje::dataToJson() {
 	json_t* rootJ = json_object();
-	json_object_set_new(rootJ, "stretchQuant",
-		json_integer(stretchQuant));
+	json_object_set_new(rootJ, "stretchQuant", json_integer(stretchQuant));
+	json_object_set_new(rootJ, "stereoMode", json_integer(stereoMode));
 	json_object_set_new(rootJ, "cvBufferMode", json_integer(cvBufferMode));
 	json_object_set_new(rootJ, "emptyOnReset", json_boolean(emptyOnReset));
 	json_object_set_new(rootJ, "channels", json_integer(channels));
@@ -71,6 +72,9 @@ void Adje::dataFromJson(json_t* rootJ) {
 	json_t* stretchQuantJ = json_object_get(rootJ, "stretchQuant");
 	if (stretchQuantJ)
 		stretchQuant = (AdditiveOscillator::StretchQuant)json_integer_value(stretchQuantJ);
+	json_t* stereoModeJ = json_object_get(rootJ, "stereoMode");
+	if (stereoModeJ)
+		stereoMode = (Spectrum::StereoMode)json_integer_value(stereoModeJ);
 	json_t* cvBufferModeJ = json_object_get(rootJ, "cvBufferMode");
 	if (cvBufferModeJ)
 		cvBufferMode = (CvBuffer::Mode)json_integer_value(cvBufferModeJ);
@@ -97,7 +101,7 @@ void Adje::onSampleRateChange(const SampleRateChangeEvent& e) {
 	blockSize = min(64, (int)(APP->engine->getSampleRate() / 750.f));
 	blockCounter = rand() % blockSize;
 
-	spec.setCRRatio(1.f / (float)blockSize);
+	spec.setSmoothCoeff(1.f / (float)blockSize);
 	// 4 seconds buffer
 	buf.resize(
 		(int)(4.f * APP->engine->getSampleRate() / (float)blockSize));
@@ -112,7 +116,8 @@ void Adje::reset(bool set0) {
 			buf.empty();
 			for (int i = 0; i < 15; i++) {
 				pitch[i] = 0.f;
-				amp[i] = 0.f;
+				ampL[i] = 0.f;
+				ampR[i] = 0.f;
 			}
 		}
 		isReset = true;
@@ -122,11 +127,13 @@ void Adje::reset(bool set0) {
 
 void Adje::process(const ProcessArgs& args) {
 	if (!(outputs[VPOCT_OUTPUT].isConnected() ||
-		outputs[AMP_OUTPUT].isConnected()))
+		outputs[AMP_L_OUTPUT].isConnected() ||
+		outputs[AMP_R_OUTPUT].isConnected()))
 		reset(true);
 	else {
 		outputs[VPOCT_OUTPUT].setChannels(channels);
-		outputs[AMP_OUTPUT].setChannels(channels);
+		outputs[AMP_L_OUTPUT].setChannels(channels);
+		outputs[AMP_R_OUTPUT].setChannels(channels);
 
 		if (blockCounter == 0)
 			resetLight *= 1.f - (8 * blockSize) * APP->engine->getSampleTime();
@@ -227,7 +234,6 @@ void Adje::process(const ProcessArgs& args) {
 						cvBufferDelay /= .95f;
 						// exponential mapping
 						cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
-						cvBufferDelay = clamp(cvBufferDelay, -1.f, 1.f);
 						buf.setDelayRel(cvBufferDelay);
 						buf.push(.1f * inputs[CVBUFFER_INPUT].getVoltage());
 					}
@@ -237,13 +243,17 @@ void Adje::process(const ProcessArgs& args) {
 					spec.setComb(cvBufferDelay);
 				}
 
+				spec.setStereoMode((outputs[AMP_R_OUTPUT].isConnected()) ?
+					stereoMode :
+					Spectrum::MONO
+				);
+
 				spec.process();
 			}
 		}
 		if (spec.ampsAre0() && !isRandomized) {
 			spec.set0();
-			if (cvBufferMode == CvBuffer::Mode::RANDOM)
-				buf.randomize();
+			buf.randomize();
 			isRandomized = true;
 			resetLight = 1.f;
 		} else if (!spec.ampsAre0()) {
@@ -255,14 +265,18 @@ void Adje::process(const ProcessArgs& args) {
 			float pitch_ = fundPitch + log2f(abs(1.f + i * stretch));
 			if (abs(pitch_) <= 10.f) {
 				pitch[i % channels] = pitch_;
-				amp[i % channels] = abs(spec.getAmp(i));
+				ampL[i % channels] = abs(spec.getAmp(i, 0));
+				ampR[i % channels] = abs(spec.getAmp(i, 1));
 				outputs[VPOCT_OUTPUT].setVoltage(pitch[i % channels], i % channels);
-				outputs[AMP_OUTPUT].setVoltage(10.f * amp[i % channels], i % channels);
+				outputs[AMP_L_OUTPUT].setVoltage(10.f * ampL[i % channels], i % channels);
+				outputs[AMP_R_OUTPUT].setVoltage(10.f * ampR[i % channels], i % channels);
 			} else {
 				pitch[i % channels] = fundPitch;
-				amp[i % channels] = 0.f;
+				ampL[i % channels] = 0.f;
+				ampR[i % channels] = 0.f;
 				outputs[VPOCT_OUTPUT].setVoltage(fundPitch, i % channels);
-				outputs[AMP_OUTPUT].setVoltage(0.f, i % channels);
+				outputs[AMP_L_OUTPUT].setVoltage(0.f, i % channels);
+				outputs[AMP_R_OUTPUT].setVoltage(0.f, i % channels);
 			}
 		}
 

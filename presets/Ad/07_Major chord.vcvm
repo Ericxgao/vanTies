@@ -1,0 +1,62 @@
+{
+  "plugin": "vanTies",
+  "model": "Ad",
+  "version": "2.7.0",
+  "params": [
+    {
+      "value": 2.0,
+      "id": 0
+    },
+    {
+      "value": 1.0,
+      "id": 1
+    },
+    {
+      "value": 2.3219280242919922,
+      "id": 2
+    },
+    {
+      "value": 0.33333331346511841,
+      "id": 3
+    },
+    {
+      "value": -0.68000000715255737,
+      "id": 4
+    },
+    {
+      "value": 0.0,
+      "id": 5
+    },
+    {
+      "value": 0.0,
+      "id": 6
+    },
+    {
+      "value": 0.0,
+      "id": 7
+    },
+    {
+      "value": 0.0,
+      "id": 8
+    },
+    {
+      "value": 0.0,
+      "id": 9
+    },
+    {
+      "value": 0.0,
+      "id": 10
+    },
+    {
+      "value": 0.0,
+      "id": 11
+    }
+  ],
+  "data": {
+    "pitchQuant": 0,
+    "stretchQuant": 0,
+    "stereoMode": 1,
+    "cvBufferMode": 0,
+    "emptyOnReset": false
+  }
+}

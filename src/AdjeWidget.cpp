@@ -10,23 +10,61 @@ void AdjeSpectrumWidget::drawLayer(const DrawArgs& args, int layer) {
 	if (layer == 1) {
 		nvgStrokeWidth(args.vg, 1.5f);
 
-		for (int i = 0; i < module->channels; i++) {
-			float x = (module->pitch[i] * .05f + .5f) * box.size.x;
-			float y = abs(module->amp[i]);
-			// Map the amplitudes logaritmically
-			// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
-			if (y > .00128858194411415455f) {
-				y = log2f(y);
-				y *= .10416666666666666667f;
-				y += 1.f;
-				y *= box.size.y;
+		if (module->spec.getStereoMode() != Spectrum::MONO) {
+			for (int i = 0; i < module->channels; i++) {
+				float x = (module->pitch[i] * .05f + .5f) * box.size.x;
+				float yL = abs(module->ampL[i]);
+				float yR = abs(module->ampR[i]);
+				// Map the amplitudes logaritmically
+				// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
+				// Map the amplitudes logaritmically
+						// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
+				yL = (yL > .00128858194411415455f) ?
+					box.size.y * (.10416666666666666667f * log2f(yL) + 1.f) :
+					0.f;
+				yR = (yR > .00128858194411415455f) ?
+					box.size.y * (.10416666666666666667f * log2f(yR) + 1.f) :
+					0.f;
+				// Draw the spectral lines.
+				if (yL > yR) {
+					nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, x, box.size.y);
+					nvgLineTo(args.vg, x, box.size.y - yL);
+					nvgStroke(args.vg);
+					nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, x, box.size.y);
+					nvgLineTo(args.vg, x, box.size.y - yR);
+				} else {
+					nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, x, box.size.y);
+					nvgLineTo(args.vg, x, box.size.y - yR);
+					nvgStroke(args.vg);
+					nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, x, box.size.y);
+					nvgLineTo(args.vg, x, box.size.y - yL);
+				}
+				nvgStroke(args.vg);
 			}
-			// Draw the spectral lines.
+		} else {
 			nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg, x, box.size.y);
-			nvgLineTo(args.vg, x, box.size.y - y);
-			nvgStroke(args.vg);
+			for (int i = 0; i < module->channels; i++) {
+				float x = (module->pitch[i] * .05f + .5f) * box.size.x;
+				float y = abs(module->ampL[i]);
+				// Map the amplitudes logaritmically
+				// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
+				y = (y > .00128858194411415455f) ?
+					box.size.y * (.10416666666666666667f * log2f(y) + 1.f) :
+					0.f;
+				// Draw the spectral lines.
+				nvgBeginPath(args.vg);
+				nvgMoveTo(args.vg, x, box.size.y);
+				nvgLineTo(args.vg, x, box.size.y - y);
+				nvgStroke(args.vg);
+			}
 		}
 	}
 	Widget::drawLayer(args, layer);
@@ -67,33 +105,35 @@ AdjeWidget::AdjeWidget(Adje* module) {
 		mm2px(Vec(53.34, 80)), module, Adje::SIEVE_ATT_PARAM));
 
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(6.773333333333333, 92)), module, Adje::STRETCH_INPUT));
+		mm2px(Vec(7.62, 92)), module, Adje::STRETCH_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(20.32, 92)), module, Adje::PARTIALS_INPUT));
+		mm2px(Vec(22.86, 92)), module, Adje::PARTIALS_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(33.86666666666667, 92)), module, Adje::TILT_INPUT));
+		mm2px(Vec(38.1, 92)), module, Adje::TILT_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(47.413333333333334, 92)), module, Adje::SIEVE_INPUT));
+		mm2px(Vec(53.34, 92)), module, Adje::SIEVE_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(13.546666666666667, 103)), module, Adje::VPOCT_INPUT));
+		mm2px(Vec(12.192, 103)), module, Adje::VPOCT_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(27.093333333333334, 103)), module, Adje::CVBUFFER_DELAY_INPUT));
+		mm2px(Vec(24.384, 103)), module, Adje::CVBUFFER_DELAY_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(40.64, 103)), module, Adje::CVBUFFER_CLOCK_INPUT));
+		mm2px(Vec(36.576, 103)), module, Adje::CVBUFFER_CLOCK_INPUT));
 	addOutput(createOutputCentered<DarkPJ301MPort>(
-		mm2px(Vec(54.18666666666667, 103)), module, Adje::VPOCT_OUTPUT));
+		mm2px(Vec(48.768, 103)), module, Adje::VPOCT_OUTPUT));
 	addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(
-		mm2px(Vec(6.773333333333333, 114)), module, Adje::RESET_PARAM, Adje::RESET_LIGHT));
+		mm2px(Vec(6.096, 114)), module, Adje::RESET_PARAM, Adje::RESET_LIGHT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(20.32, 114)), module, Adje::RESET_INPUT));
+		mm2px(Vec(18.288, 114)), module, Adje::RESET_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
-		mm2px(Vec(33.86666666666667, 114)), module, Adje::CVBUFFER_INPUT));
+		mm2px(Vec(30.48, 114)), module, Adje::CVBUFFER_INPUT));
 	addOutput(createOutputCentered<DarkPJ301MPort>(
-		mm2px(Vec(47.413333333333334, 114)), module, Adje::AMP_OUTPUT));
+		mm2px(Vec(42.672, 114)), module, Adje::AMP_L_OUTPUT));
+	addOutput(createOutputCentered<DarkPJ301MPort>(
+		mm2px(Vec(54.864000000000004, 114)), module, Adje::AMP_R_OUTPUT));
 
 	AdjeSpectrumWidget* spectrumWidget =
 		createWidget<AdjeSpectrumWidget>(mm2px(Vec(1, 8)));
-	spectrumWidget->setSize(mm2px(Vec(58.96, 17)));
+	spectrumWidget->setSize(mm2px(Vec(58.96, 15)));
 	spectrumWidget->module = module;
 	addChild(spectrumWidget);
 }
@@ -109,6 +149,13 @@ void AdjeWidget::appendContextMenu(Menu* menu) {
 		 "Consonants",
 		 "Harmonics" },
 		&module->stretchQuant));
+
+	menu->addChild(createIndexPtrSubmenuItem(
+		"Stereo mode",
+		{ "Mono",
+			"Soft-panned",
+			"Hard-panned" },
+		&module->stereoMode));
 
 	menu->addChild(createIndexPtrSubmenuItem(
 		"CV buffer order",

@@ -28,12 +28,14 @@ struct Bufke : Module {
 		LIGHTS_LEN
 	};
 
-	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
+	Bufke();
+
+	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
 	bool emptyOnReset = false;
 
 	int lowest = 0;
 	int highest = 0;
-	int channels = 16;
+	int channels = 06;
 
 	bool resetSignal = false;
 
@@ -54,8 +56,6 @@ struct Bufke : Module {
 	int* masterChannels = nullptr;
 	bool* masterIsReset = nullptr;
 	bool* masterIsRandomized = nullptr;
-
-	Bufke();
 
 	json_t* dataToJson() override;
 	void dataFromJson(json_t* rootJ) override;

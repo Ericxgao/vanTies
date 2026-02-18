@@ -1,8 +1,6 @@
 #include "RatFuncOscillator.h"
 
 using namespace std;
-using namespace rack;
-using namespace dsp;
 
 float RatFuncOscillator::phaseDistort1_1(float x, float c1) {
   float c2 = c1 * c1;
@@ -25,21 +23,23 @@ float RatFuncOscillator::phaseDistort2_1(float x, float c1) {
 }
 
 float RatFuncOscillator::primaryWaveFunction_1(float x) {
-  x -= floor(x);
-  return clamp(
+  x -= floorf(x);
+  return min(max(
     (x * (2.f * x - 1.f) * (a - b) * (a - b))
     / (a * a * (2.f * SQRT2M1 * b * b - SQRT2M1 * b + x * (2.f * x - 1.f))
-      + b * x * (-2.f * a * (2.f * SQRT2M1 * b + 2.f * x - M_SQRT2)
-        + b * (2.f * M_SQRT2 * x - 1.f)
+      + b * x * (-2.f * a * (2.f * SQRT2M1 * b + 2.f * x - SQRT2)
+        + b * (2.f * SQRT2 * x - 1.f)
         - SQRT2M1 * x)),
-    -1.f, 1.f);
+    -1.f), 1.f);
 }
 
 float RatFuncOscillator::primaryWaveFunction(float x) {
   x -= floorf(x);
-  if (x < .5f)
-    return primaryWaveFunction_1(x);
-  return -primaryWaveFunction_1(1.f - x);
+  float y = (x < .5f) ?
+    primaryWaveFunction_1(x) :
+    -primaryWaveFunction_1(1.f - x);
+  // check for NaNs or infs
+  return (abs(y) < 2.f) ? y : 0.f;
 }
 
 // we don't need the following two inverse functions for audio output,
@@ -59,7 +59,7 @@ float RatFuncOscillator::phaseDistortInv1_1(float x, float c1) {
         + 14.f * c2 * x - 4.f * c2 - 2.f * A * c1 * x2 - 3.f * A * x2
         + 2.f * A * c1 * x + 2.f * A * x + 11.f * c1 * x2 - 6.f * c1 * x
         + 2.f * c1 - 2.f * x2))
-    / (M_SQRT2 * (2.f * c2 + A - c1) * x);
+    / (SQRT2 * (2.f * c2 + A - c1) * x);
 }
 
 float RatFuncOscillator::phaseDistortInv2_1(float x, float c1) {
@@ -76,84 +76,98 @@ float RatFuncOscillator::phaseDistortInv2_1(float x, float c1) {
         + 14.f * c2 * x - 4.f * c2 + 2.f * A * c1 * x2 + 3.f * A * x2
         - 2.f * A * c1 * x - 2.f * A * x + 11.f * c1 * x2 - 6.f * c1 * x
         + 2.f * c1 - 2 * x2))
-    / (M_SQRT2 * (-2.f * c2 + A + c1) * x);
+    / (SQRT2 * (-2.f * c2 + A + c1) * x);
 }
 
 float RatFuncOscillator::phaseDistort1(float x) {
-  x -= floor(x);
-  if (c > .5f)
-    return phaseDistort1_1(x, c);
-  if (c < .5f)
-    return -phaseDistort2_1(1.f - x, 1.f - c);
-  return x;
+  x -= floorf(x);
+  return (c > .5f) ?
+    phaseDistort1_1(x, c) :
+    -phaseDistort2_1(1.f - x, 1.f - c);
 }
 
 float RatFuncOscillator::phaseDistort2(float x) {
-  x -= floor(x);
-  if (c > .5f)
-    return phaseDistort2_1(x, c);
-  if (c < .5f)
-    return -phaseDistort1_1(1.f - x, 1.f - c);
-  return x;
+  x -= floorf(x);
+  return (c > .5f) ?
+    phaseDistort2_1(x, c) :
+    -phaseDistort1_1(1.f - x, 1.f - c);
 }
 
 float RatFuncOscillator::phaseDistortInv1(float x) {
+  if (abs(c - .5f) < 1.e-6f)
+    return x;
+
   float y;
   if (c > .5f) {
-    x -= floor(x);
+    x -= floorf(x);
     y = phaseDistortInv2_1(x, c);
-  } else if (c == .5f)
-    y = x;
-  else {
+  } else {
     x = -x;
-    x -= floor(x);
+    x -= floorf(x);
     y = -phaseDistortInv1_1(x, 1.f - c);
   }
-  y -= floor(y);
+  y -= floorf(y);
   return y;
 }
 
 float RatFuncOscillator::phaseDistortInv2(float x) {
+  if (abs(c - .5f) < 1.e-6f)
+    return x;
+
   float y;
   if (c > .5f) {
-    x -= floor(x);
+    x -= floorf(x);
     y = phaseDistortInv1_1(x, c);
-  } else if (c == .5f)
-    y = x;
-  else {
+  } else {
     x = -x;
-    x -= floor(x);
+    x -= floorf(x);
     y = -phaseDistortInv2_1(x, 1.f - c);
   }
-  y -= floor(y);
+  y -= floorf(y);
   return y;
 }
 
 // set the paramaters a, b, and c as values between 0. and 1.
 void RatFuncOscillator::setParams(float a, float b, float c) {
-  a = clamp(a, 0.f, 1.f);
-  b = clamp(b, 0.f, 1.f);
-  c = clamp(c, 0.f, 1.f);
+  if (restrictParams) {
+    // map the parameters in such a way that the worst aliasing is avoided
+    // (lots of more or less educated guessing is going on here)
 
-  // map the parameters in such a way that the worst aliasing is avoided
-  // (lots of more or less educated guessing is going on here)
+    // exclude values of c around 0 and 1
+    float minimum = min(16.f * abs((float)dPh[0]), .5f);
+    float maximum = 1.f - minimum;
+    c = min(max(c, minimum), maximum);
 
-  // exclude values of c around 0 and 1
-  float d = min(8.f * abs((float)dPhase[0]), .5f);
-  c = clamp(c, d, 1.f - d);
+    // d is the normalized frequency (dPh[0]) 
+    // scaled with a factor that is 1 for c == .5
+    // and grows bigger for c -> 0 or 1
+    float d = abs((float)dPh[0] / (1.f - 2.f * abs(c - .5f)));
 
-  // range of a (0, .5)
-  a *= .5f;
-  // exclude values of a around 0 and .5
-  d = min(4.f * abs((float)dPhase[0] / min(c, 1.f - c)), .25f);
-  a = clamp(a, d, .5f - .5f * d);
+    // exclude values of a around 0 and 1
+    minimum = min(32.f * d, .5f);
+    maximum = max(min(1.f - 16.f * d, .99f), .5f);
+    a = min(max(a, minimum), maximum);
 
-  // range of b: (a, .5)
-  b = a + (.5f - a) * b;
-  // exclude values of b around a and .5
-  d = min(4.f * abs((float)dPhase[0] / ((a - .5f) * min(c, 1.f - c))),
-    .25f - .5f * a);
-  b = clamp(b, a + d, .5f - d);
+    // range of a: (0, .5)
+    a *= .5f;
+
+    // exclude values of b around 0 and 1
+    minimum = min(8.f * d / (.5f - a), .5f);
+    maximum = max(1.f - 4.f * d / a, .5f);
+    b = min(max(b, minimum), maximum);
+
+    // range of b: (a, .5)
+    b = a + (.5f - a) * b;
+  } else {
+    c = min(max(c, 0.f), 1.f);
+    a = min(max(a, 0.f), 1.f);
+    b = min(max(b, 0.f), 1.f);
+
+    // range of a: (0, .5)
+    a *= .5f;
+    // range of b: (a, .5)
+    b = a + (.5f - a) * b;
+  }
 
   this->a = a;
   this->b = b;
@@ -161,8 +175,14 @@ void RatFuncOscillator::setParams(float a, float b, float c) {
 }
 
 void RatFuncOscillator::process() {
-  wave[0] = waveFunction1(phase[0]);
-  wave[1] = waveFunction2(phase[0]);
+  if (abs(dPh[0]) > .5) {
+    wave[0] = 0.f;
+    wave[1] = 0.f;
+    return;
+  }
+
+  wave[0] = waveFunction1(ph[0]);
+  wave[1] = waveFunction2(ph[0]);
 
   incrementPhases();
 }

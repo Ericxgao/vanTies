@@ -13,7 +13,7 @@ using namespace dsp;
 Funs::Funs() {
   config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-  configParam(VPOCT_INPUT, 0.f, 6.f, 4.f, "pitch");
+  configParam(PITCH_PARAM, 0.f, 6.f, 4.f, "pitch");
   configParam(FMAMT_PARAM, 0.f, 1.f, 0.f, "FM amount");
   configParam(A_PARAM, 0.f, 1.f, .5f, "a");
   configParam(B_PARAM, 0.f, 1.f, .5f, "b");
@@ -31,14 +31,18 @@ Funs::Funs() {
   configOutput(WAVE1_OUTPUT, "wave 1");
   configOutput(WAVE2_OUTPUT, "wave 2");
 
-  getParamQuantity(VPOCT_PARAM)->randomizeEnabled = false;
-}
+  getParamQuantity(PITCH_PARAM)->randomizeEnabled = false;
 
+  for (int c = 0; c < 16; c++)
+    osc[c].setSampleRate(APP->engine->getSampleRate());
+}
 
 json_t* Funs::dataToJson() {
   json_t* rootJ = json_object();
   json_object_set_new(rootJ, "pitchQuant",
     json_integer(pitchQuant));
+  json_object_set_new(rootJ, "restrictParams",
+    json_boolean(restrictParams));
   return rootJ;
 }
 
@@ -46,6 +50,21 @@ void Funs::dataFromJson(json_t* rootJ) {
   json_t* pitchQuantJ = json_object_get(rootJ, "pitchQuant");
   if (pitchQuantJ)
     pitchQuant = (PitchQuant)json_integer_value(pitchQuantJ);
+  json_t* restrictParamsJ = json_object_get(rootJ, "restrictParams");
+  if (restrictParamsJ)
+    restrictParams = json_boolean_value(restrictParamsJ);
+}
+
+void Funs::onReset(const ResetEvent& e) {
+  Module::onReset(e);
+  restrictParams = true;
+}
+
+void Funs::onSampleRateChange(const SampleRateChangeEvent& e) {
+  Module::onSampleRateChange(e);
+  for (int c = 0; c < 16; c++) {
+    osc[c].setSampleRate(APP->engine->getSampleRate());
+  }
 }
 
 void Funs::process(const ProcessArgs& args) {
@@ -55,7 +74,7 @@ void Funs::process(const ProcessArgs& args) {
   outputs[WAVE2_OUTPUT].setChannels(channels);
 
   for (int ch = 0; ch < channels; ch++) {
-    float pitch = params[VPOCT_PARAM].getValue();
+    float pitch = params[PITCH_PARAM].getValue();
 
     if (pitchQuant == OCTAVES)
       pitch = round(pitch);
@@ -78,7 +97,7 @@ void Funs::process(const ProcessArgs& args) {
     c += .1f * params[C_ATT_PARAM].getValue()
       * inputs[C_INPUT].getPolyVoltage(ch);
 
-    osc[ch].setFreq(pitch);
+    osc[ch].setRestrictParams(restrictParams);
     osc[ch].setParams(a, b, c);
 
     osc[ch].process();
